@@ -1,7 +1,7 @@
 package com.accessqueuesystem.accessqueuesystem;
 
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
+import com.accessqueuesystem.accessqueuesystem.util.RestTemplateUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.ResponseEntity;
@@ -11,12 +11,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.Arrays;
+import java.net.URI;
 
 @SpringBootApplication
 @Controller
+@RequiredArgsConstructor
 public class AccessQueueSystemApplication {
-    RestTemplate restTemplate = new RestTemplate();
+
+    private final RestTemplateUtil restTemplateUtil;
+
     public static void main(String[] args) {
         SpringApplication.run(AccessQueueSystemApplication.class, args);
     }
@@ -25,25 +28,27 @@ public class AccessQueueSystemApplication {
     public String index(@RequestParam(name = "queue", defaultValue = "default") String queue,
                         @RequestParam(name = "user_id") Long userId) {
 
-        var uri = UriComponentsBuilder
-                .fromUriString("http://127.0.0.1:9010")
-                .path("/api/v1/queue/allowed")
-                .queryParam("queue", queue)
-                .queryParam("user_id", userId)
-                .encode()
-                .build()
-                .toUri();
+        // Requeue API 호출
+        restTemplateUtil.callQueueApi("http://127.0.0.1:9010/api/v1/queue/requeue", queue, userId);
 
-        ResponseEntity<AllowedUserResponse> response = restTemplate.getForEntity(uri, AllowedUserResponse.class);
-        if (response.getBody() == null || !response.getBody().allowed()) {
-            // 대기 웹페이지로 리다이렉트
+        // Allowed API 호출
+        AllowedUserResponse allowedResponse = restTemplateUtil.callQueueApi(
+                "http://127.0.0.1:9010/api/v1/queue/allowed",
+                queue,
+                userId
+        );
+
+        if (allowedResponse == null || !allowedResponse.allowed()) {
+            // 대기 페이지로 리다이렉트
             return "redirect:http://127.0.0.1:9010/waiting-room?user_id=%d&redirect_url=%s".formatted(
                     userId, "http://127.0.0.1:9000?user_id=%d".formatted(userId));
         }
-        // 허용 상태라면 해당 페이지를 진입
+
+        // 메인 페이지로 이동
         return "index";
     }
 
-    public record AllowedUserResponse(Boolean allowed) {
-    }
+
+
+    public record AllowedUserResponse(Boolean allowed) {}
 }
