@@ -4,14 +4,9 @@ import com.accessqueuesystem.accessqueuesystem.util.RestTemplateUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
-
-import java.net.URI;
 
 @SpringBootApplication
 @Controller
@@ -28,9 +23,6 @@ public class AccessQueueSystemApplication {
     public String index(@RequestParam(name = "queue", defaultValue = "default") String queue,
                         @RequestParam(name = "user_id") Long userId) {
 
-        // Requeue API 호출
-        restTemplateUtil.callQueueApi("http://127.0.0.1:9010/api/v1/queue/requeue", queue, userId);
-
         // Allowed API 호출
         AllowedUserResponse allowedResponse = restTemplateUtil.callQueueApi(
                 "http://127.0.0.1:9010/api/v1/queue/allowed",
@@ -45,10 +37,8 @@ public class AccessQueueSystemApplication {
         }
 
         // 메인 페이지로 이동
-        return "index";
+        return "redirect:/course";
     }
-
-
 
     public record AllowedUserResponse(Boolean allowed) {}
 }

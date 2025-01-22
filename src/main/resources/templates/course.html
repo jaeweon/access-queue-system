@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>수강 신청 시스템</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px 0;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .filter-section {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .filter-section input,
+        .filter-section select,
+        .filter-section button {
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+
+        table th {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        .btn-apply {
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .btn-apply:hover {
+            background-color: #218838;
+        }
+
+        .status {
+            font-size: 14px;
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+<header>수강 신청 시스템</header>
+<div class="container">
+    <div class="filter-section">
+        <div>
+            <label for="department">학과:</label>
+            <select id="department">
+                <option value="all">전체</option>
+                <option value="computer">컴퓨터공학과</option>
+                <option value="mechanical">기계공학과</option>
+                <option value="business">경영학과</option>
+            </select>
+        </div>
+        <div>
+            <label for="courseName">과목명:</label>
+            <input type="text" id="courseName" placeholder="과목명을 입력하세요">
+        </div>
+        <button id="searchButton">검색</button>
+    </div>
+    <table>
+        <thead>
+        <tr>
+            <th>신청</th>
+            <th>과목명</th>
+            <th>학점</th>
+            <th>교수</th>
+            <th>시간</th>
+            <th>인원</th>
+        </tr>
+        </thead>
+        <tbody id="courseList">
+        <!-- 타임리프를 사용해 서버에서 받은 데이터를 렌더링 -->
+        <tr th:each="course : ${courses}">
+            <td>
+                <form action="/api/v1/course/register" method="post">
+                    <input type="hidden" name="courseCode" th:value="${course.courseCode}">
+                    <button type="submit" class="btn-apply">신청</button>
+                </form>
+            </td>
+            <td th:text="${course.courseName}"></td>
+            <td th:text="${course.credit}"></td>
+            <td th:text="${course.professorName}"></td>
+            <td th:text="${course.schedule}"></td>
+            <td th:text="${course.currentEnrolled + '/' + course.maxCapacity}"></td>
+        </tr>
+        </tbody>
+    </table>
+    <div class="status" id="statusMessage"></div>
+</div>
+<script>
+    // 검색 버튼 클릭 시 검색 결과 가져오기
+    $('#searchButton').click(function () {
+        const department = $('#department').val();
+        const courseName = $('#courseName').val();
+
+        $.ajax({
+            url: '/api/v1/course/search',
+            type: 'GET',
+            data: { department: department, courseName: courseName },
+            success: function (data) {
+                const courseList = $('#courseList');
+                courseList.empty();
+
+                data.forEach(course => {
+                    const row = `
+                        <tr>
+                            <td>
+                                <form action="/api/v1/course/register" method="post">
+                                    <input type="hidden" name="courseCode" value="${course.courseCode}">
+                                    <button type="submit" class="btn-apply">신청</button>
+                                </form>
+                            </td>
+                            <td>${course.courseName}</td>
+                            <td>${course.credit}</td>
+                            <td>${course.professorName}</td>
+                            <td>${course.schedule}</td>
+                            <td>${course.currentEnrolled}/${course.maxCapacity}</td>
+                        </tr>
+                    `;
+                    courseList.append(row);
+                });
+            },
+            error: function () {
+                $('#statusMessage').text('강의 검색에 실패했습니다.').css('color', 'red');
+            }
+        });
+    });
+</script>
+</body>
+</html>

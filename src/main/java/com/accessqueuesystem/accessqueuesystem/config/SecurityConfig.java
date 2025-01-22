@@ -29,8 +29,10 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/register", // 회원가입 페이지
                                 "/login", // 로그인 페이지
+                                "/course", // 수강 신청 페이지
                                 "/api/v1/auth/register", // 회원가입 API
                                 "/api/v1/auth/login", // 로그인 API
+                                "/api/v1/auth/course", // 수강 신청 API
                                 "/", // 인덱스 페이지
                                 "/css/**", // CSS 파일
                                 "/js/**", // JavaScript 파일
