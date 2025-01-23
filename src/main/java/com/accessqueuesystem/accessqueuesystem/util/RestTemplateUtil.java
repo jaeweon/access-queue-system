@@ -12,13 +12,13 @@ import java.net.URI;
 public class RestTemplateUtil {
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public AccessQueueSystemApplication.AllowedUserResponse callQueueApi(String baseUrl, String queue, Long userId) {
+    public AccessQueueSystemApplication.AllowedUserResponse callQueueApi(String baseUrl, String queue, String userId) {
         URI uri = buildQueueUri(baseUrl, queue, userId);
         ResponseEntity<AccessQueueSystemApplication.AllowedUserResponse> response = restTemplate.getForEntity(uri, AccessQueueSystemApplication.AllowedUserResponse.class);
         return response.getBody();
     }
 
-    public URI buildQueueUri(String baseUrl, String queue, Long userId) {
+    public URI buildQueueUri(String baseUrl, String queue, String userId) {
         return UriComponentsBuilder.fromUriString(baseUrl)
                 .queryParam("queue", queue)
                 .queryParam("user_id", userId)

@@ -9,7 +9,7 @@
             margin: 0;
             padding: 0;
             font-family: Arial, sans-serif;
-            background-image: url('https://via.placeholder.com/1920x1080'); /* 대학교 배경 이미지 URL */
+            /*background-image: url('https://via.placeholder.com/1920x1080');*/
             background-size: cover;
             background-position: center;
             height: 100vh;
@@ -19,7 +19,7 @@
         }
 
         .form-container {
-            background-color: rgba(255, 255, 255, 0.9); /* 반투명 흰색 배경 */
+            background-color: rgba(255, 255, 255, 0.9);
             padding: 20px 40px;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -73,33 +73,21 @@
             text-decoration: underline;
         }
 
-        .university-title {
-            position: absolute;
-            top: 100px; /* 상단에서 약간 아래로 조정 */
-            width: 100%;
-            text-align: center;
-            font-size: 40px;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-        }
-
         .developer-credit {
             position: absolute;
             bottom: 10px;
             right: 10px;
-            font-size: 18px;
+            font-size: 14px;
             color: rgba(255, 255, 255, 0.8);
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        #simulate-mass-login-container {
+            display: none;
         }
     </style>
 </head>
 <body>
-<!-- 대학교 이름 -->
-<div class="university-title">백엔드 대학교</div>
-
-<!-- 폼 컨테이너 -->
-<div class="form-container" id="form-container">
+<div class="form-container">
     <h1 id="form-title">회원가입</h1>
     <form id="user-form" action="/api/v1/auth/register" method="POST">
         <label for="username">아이디:</label>
@@ -111,41 +99,108 @@
         <button type="submit" id="form-button">회원가입</button>
     </form>
     <span class="switch-link" id="switch-link">이미 계정이 있으신가요? 로그인</span>
+    <div id="simulate-mass-login-container">
+        <label>
+            <input type="checkbox" id="simulate-mass-login" name="simulateMassLogin">
+            동시 실행 (현재 유저 + 1000 더미 유저)
+        </label>
+    </div>
 </div>
-
-<!-- 개발자 정보 -->
 <div class="developer-credit">Developed by Jae Weon Lee</div>
 
 <script>
-    const formContainer = document.getElementById('form-container');
     const formTitle = document.getElementById('form-title');
     const userForm = document.getElementById('user-form');
     const formButton = document.getElementById('form-button');
     const switchLink = document.getElementById('switch-link');
     const emailLabel = document.getElementById('email-label');
     const emailInput = document.getElementById('email');
+    const massLoginContainer = document.getElementById('simulate-mass-login-container');
+    const massLoginCheckbox = document.getElementById('simulate-mass-login'); // 체크박스 요소 가져오기
 
     let isRegister = true;
 
+    // 회원가입/로그인 전환
     switchLink.addEventListener('click', () => {
         isRegister = !isRegister;
 
         if (isRegister) {
+            // 회원가입 상태
             formTitle.textContent = '회원가입';
             userForm.action = '/api/v1/auth/register';
             formButton.textContent = '회원가입';
+
+            // 이메일 필드 보이기 및 필수 설정
             emailLabel.style.display = 'block';
             emailInput.style.display = 'block';
+            emailInput.setAttribute('required', 'true');
+
+            // 동시 로그인 옵션 숨기기
+            massLoginContainer.style.display = 'none';
+
             switchLink.textContent = '이미 계정이 있으신가요? 로그인';
         } else {
+            // 로그인 상태
             formTitle.textContent = '로그인';
             userForm.action = '/api/v1/auth/login';
             formButton.textContent = '로그인';
+
+            // 이메일 필드 숨기기 및 필수 속성 제거
             emailLabel.style.display = 'none';
             emailInput.style.display = 'none';
+            emailInput.removeAttribute('required');
+
+            // 동시 로그인 옵션 보이기
+            massLoginContainer.style.display = 'block';
+
             switchLink.textContent = '계정이 없으신가요? 회원가입';
         }
     });
+
+    // 로그인 버튼 클릭 이벤트
+    formButton.addEventListener('click', (e) => {
+        // 동시 실행 체크 여부 확인
+        if (massLoginCheckbox.checked && !isRegister) {
+            e.preventDefault(); // 기본 폼 제출 방지
+
+            // dummy_user_1 계정으로 로그인
+            const dummyUserData = {
+                username: 'dummy_user_1',
+                password: 'defaultPassword123',
+            };
+
+            fetch(userForm.action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(dummyUserData),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    console.log('Dummy user login success:', data);
+                    alert('Dummy user 로그인 성공!');
+                })
+                .catch((error) => {
+                    console.error('Error during dummy login:', error);
+                    alert('Dummy user 로그인 실패!');
+                });
+        } else if (!massLoginCheckbox.checked && !isRegister) {
+            // 현재 입력된 정보로 로그인
+            // const currentUserId = document.getElementById('username').value;
+            // const currentPassword = document.getElementById('password').value;
+            //
+            // if (!currentUserId || !currentPassword) {
+            //     alert('아이디와 비밀번호를 입력해주세요.');
+            //     e.preventDefault(); // 기본 폼 제출 방지
+            // }
+
+            // 정상 로그인은 폼 제출을 진행
+        }
+    });
 </script>
+
+
+
 </body>
 </html>
