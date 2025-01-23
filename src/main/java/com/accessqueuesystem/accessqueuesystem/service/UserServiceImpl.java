@@ -31,7 +31,28 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         userRepository.save(user);
+//        generateDummyUsers(request);
     }
+
+//    private void generateDummyUsers(RegisterRequest request) {
+//        // 사용자 정의 더미 데이터 생성 로직
+//        for (int i = 1; i <= 1000; i++) {
+//            String dummyUsername = String.format("dummy_user_%d", i);
+//            String dummyEmail = String.format("dummy_user_%d@example.com", i);
+//
+//            // 중복 검사 후 삽입
+//            if (!userRepository.existsByUsername(dummyUsername) && !userRepository.existsByEmail(dummyEmail)) {
+//                UserEntity dummyUser = UserEntity.builder()
+//                        .username(dummyUsername)
+//                        .password(passwordEncoder.encode("defaultPassword123")) // 기본 비밀번호 설정
+//                        .email(dummyEmail)
+//                        .role(UserEntity.Role.STUDENT)
+//                        .build();
+//
+//                userRepository.save(dummyUser);
+//            }
+//        }
+//    }
 
     @Override
     public UserEntity findByUsername(String username) {

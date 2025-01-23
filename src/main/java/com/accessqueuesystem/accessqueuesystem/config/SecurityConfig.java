@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,6 +14,12 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
+
 @Configuration
 @RequiredArgsConstructor
 @EnableMethodSecurity // 메소드 수준의 보안을 활성화 (예: @PreAuthorize)
@@ -23,40 +30,52 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable) // CSRF 보호 비활성화
+                .csrf(AbstractHttpConfigurer::disable) // CSRF 비활성화
+                .cors(Customizer.withDefaults()) // CORS 활성화
                 .authorizeHttpRequests(auth -> auth
-                        // 허용할 경로들
                         .requestMatchers(
-                                "/register", // 회원가입 페이지
-                                "/login", // 로그인 페이지
-                                "/course", // 수강 신청 페이지
-                                "/api/v1/auth/register", // 회원가입 API
-                                "/api/v1/auth/login", // 로그인 API
-                                "/api/v1/auth/course", // 수강 신청 API
-                                "/", // 인덱스 페이지
-                                "/css/**", // CSS 파일
-                                "/js/**", // JavaScript 파일
-                                "/images/**", // 이미지 파일
-                                "/webjars/**", // 웹 자르 파일
-                                "/waiting-room", // 대기실 페이지
-                                "/api/v1/queue/**" // 대기열 관련 API
+                                "/register",
+                                "/login",
+                                "/course",
+                                "/api/v1/auth/register",
+                                "/api/v1/auth/login",
+                                "/api/v1/auth/course",
+                                "/",
+                                "/css/**",
+                                "/js/**",
+                                "/images/**",
+                                "/webjars/**",
+                                "/waiting-room",
+                                "/api/v1/queue/**"
                         ).permitAll()
-                        .anyRequest().authenticated() // 나머지 모든 요청은 인증 필요
+                        .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
-                        .loginPage("/login") //  로그인 페이지
-                        .defaultSuccessUrl("/", true) // 로그인 성공 시 이동할 기본 경로
+                        .loginPage("/login")
+                        .defaultSuccessUrl("/", true)
                         .permitAll()
                 )
                 .logout(logout -> logout
-                        .logoutUrl("/logout") // 로그아웃 경로
-                        .logoutSuccessUrl("/login") // 로그아웃 성공 시 이동 경로
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login")
                         .permitAll()
                 );
 
         return http.build();
     }
 
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://127.0.0.1:9000")); // 허용할 Origin
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true); // 자격 증명 허용 (예: 쿠키 포함)
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {

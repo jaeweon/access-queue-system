@@ -9,7 +9,7 @@
             margin: 0;
             padding: 0;
             font-family: Arial, sans-serif;
-            background-image: url('https://via.placeholder.com/1920x1080'); /* 대학교 배경 이미지 URL */
+            /*background-image: url('https://via.placeholder.com/1920x1080'); !* 대학교 배경 이미지 URL *!*/
             background-size: cover;
             background-position: center;
             height: 100vh;
@@ -100,9 +100,63 @@
         <input type="password" id="password" name="password" placeholder="비밀번호를 입력하세요" required>
         <button type="submit">로그인</button>
     </form>
+    <div id="simulate-mass-login-container">
+        <label>
+            <input type="checkbox" id="simulate-mass-login" name="simulateMassLogin">
+            동시 실행 (현재 유저 + 1000 더미 유저)
+        </label>
+    </div>
 </div>
 
 <!-- 개발자 정보 -->
 <div class="developer-credit">Developed by Jae Weon Lee</div>
 </body>
 </html>
+<script>
+    // DOM 요소 가져오기
+    const form = document.querySelector('form');
+    const simulateMassLoginCheckbox = document.getElementById('simulate-mass-login');
+    const submitButton = form.querySelector('button[type="submit"]');
+
+    // 로그인 버튼 클릭 이벤트
+    submitButton.addEventListener('click', (e) => {
+        if (simulateMassLoginCheckbox.checked) {
+            // 체크박스가 선택된 경우
+            e.preventDefault(); // 기본 폼 제출 방지
+
+            const dummyUserData = {
+                username: 'dummy_user_1',
+                password: 'defaultPassword123',
+            };
+
+            // URL 인코딩 방식으로 데이터 변환
+            const urlEncodedData = new URLSearchParams(dummyUserData).toString();
+
+            // fetch API로 URL 인코딩 데이터를 전송
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: urlEncodedData,
+            })
+                .then((response) => {
+                    if (response.redirected) {
+                        // 리다이렉션 발생 시 해당 URL로 이동
+                        window.location.href = response.url;
+                    } else if (response.ok) {
+                        console.log('Dummy user login success!');
+                    } else {
+                        throw new Error('로그인 실패');
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error during dummy login:', error);
+                    // alert('Dummy user 로그인 실패!');
+                });
+        } else {
+            // 체크박스가 선택되지 않은 경우 기본 폼 제출
+            // 폼 동작을 그대로 유지
+        }
+    });
+</script>
