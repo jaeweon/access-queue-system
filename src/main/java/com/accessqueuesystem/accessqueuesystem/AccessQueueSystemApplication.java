@@ -23,11 +23,6 @@ public class AccessQueueSystemApplication {
     public String index(@RequestParam(name = "queue", defaultValue = "default") String queue,
                         @RequestParam(name = "user_id") String userId) {
 
-        String redirectUrl = "http://127.0.0.1:9000?user_id=%s".formatted(userId);
-        String waitingRoomUrl = "http://127.0.0.1:9010/waiting-room?user_id=%s&redirect_url=%s".formatted(userId, redirectUrl);
-
-        System.out.println("Redirecting to: " + waitingRoomUrl); // 로그 추가
-
         // Allowed API 호출
         AllowedUserResponse allowedResponse = restTemplateUtil.callQueueApi(
                 "http://127.0.0.1:9010/api/v1/queue/allowed",
