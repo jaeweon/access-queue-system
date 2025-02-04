@@ -19,7 +19,13 @@ public class RestTemplateUtil {
     }
 
     public URI buildQueueUri(String baseUrl, String queue, String userId) {
-        return UriComponentsBuilder.fromUriString(baseUrl)
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(baseUrl);
+
+        if (!baseUrl.contains(":")) { // 포트가 이미 있다면 추가하지 않음
+            builder.port(9010);
+        }
+
+        return builder
                 .queryParam("queue", queue)
                 .queryParam("user_id", userId)
                 .encode()

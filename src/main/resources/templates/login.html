@@ -1,30 +1,32 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>N 만명 대기열 시스템</title>
     <style>
         body {
             margin: 0;
             padding: 0;
             font-family: Arial, sans-serif;
-            /*background-image: url('https://via.placeholder.com/1920x1080'); !* 대학교 배경 이미지 URL *!*/
             background-size: cover;
             background-position: center;
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            flex-direction: column;
+            position: relative;
         }
 
+        /* 로그인 박스 */
         .login-container {
-            background-color: rgba(255, 255, 255, 0.9); /* 반투명 흰색 배경 */
+            background-color: rgba(255, 255, 255, 0.9);
             padding: 20px 40px;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             text-align: center;
-            width: 300px;
+            width: 350px;
         }
 
         h1 {
@@ -65,98 +67,216 @@
             background-color: #003d80;
         }
 
-        .university-title {
-            position: absolute;
-            top: 100px; /* 상단에서 약간 아래로 조정 */
-            width: 100%;
-            text-align: center;
-            font-size: 40px;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        .test-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px; /* 버튼 간의 간격 */
+            margin-top: 30px;
         }
 
+        #test-button,
+        #reset-button {
+            flex: 1;
+            max-width: 200px; /* 버튼 최대 크기 */
+            padding: 12px 20px;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        #test-button:hover {
+            background-color: #cc0000;
+        }
+
+        /* 카운트다운 표시 */
+        #countdown-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: red;
+            margin-top: 10px;
+            display: none;
+        }
+
+        /* 🔹 모달 창 스타일 */
+        .modal {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); /* 배경 어둡게 */
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            width: 650px;
+            max-height: 80vh;
+            border-radius: 10px;
+            text-align: center;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* 개발자 정보 */
         .developer-credit {
             position: absolute;
             bottom: 10px;
             right: 10px;
-            font-size: 18px;
+            font-size: 14px;
             color: rgba(255, 255, 255, 0.8);
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
         }
     </style>
 </head>
 <body>
-<!-- 대학교 이름 -->
-<div class="university-title">백엔드 대학교</div>
+
+<!-- 🔹 모달 창 -->
+<div id="intro-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>📌 N만 명 동시 접속 대기열 연습 시스템</h2>
+        <p>
+            <strong>이 시스템은 수강 신청 및 게임 대기열 접속을 연습하기</strong> 위해 만들어졌습니다.<br>
+            실제 환경과 유사한 방식으로 대기열에 진입하는 과정을 테스트할 수 있습니다.<br>
+        </p>
+        <p>
+            <strong>사용 방법</strong><br>
+            1. 로그인 버튼을 눌러 일반 로그인을 진행하세요.<br>
+            2. "부하 테스트 시작" 버튼을 눌러 카운트다운과 동시에<br>
+            N만 명의 동시 접속 테스트를 실행할 수 있습니다.<br>
+            3. 카운트다운이 종료되면 로그인이 허용됩니다.<br>
+            4. <strong>테스트 종료 후, 반드시 "테스트 새로 하기" 버튼을 눌러</strong> 시스템을 초기화하세요.<br>
+        </p>
+        <p>
+            <strong>진입 허용 기준</strong><br>
+            접속 가능 여부는 실시간 부하율에 따라 결정됩니다.<br>
+            부하율 계산 방식은 다음과 같습니다.
+        </p>
+        <strong>요청 기반 부하율</strong><br>
+                부하율 = <strong>단위 시간당 요청 수 / 서버가 처리 가능한 최대 요청 수</strong><br>
+                (값이 1에 가까울수록 서버 부하가 높음)<br><br>
+        <strong>서버 자원 기반 부하율</strong><br>
+                부하율 = <strong>(CPU 사용량 + 메모리 사용량) / 최대 가능 자원</strong><br>
+                예: CPU 80%, 메모리 70% → 부하율 = 0.75<br><br>
+        <strong>대기열 크기 기반 부하율</strong><br>
+                부하율 = <strong>현재 대기열 크기 / 최대 대기열 허용 크기</strong>
+        <p>
+            <strong>부하율에 따른 접속 처리량 조정</strong><br>
+            부하율이 높을수록 접속 허용 인원을 동적으로 조정합니다.
+        </p>
+        <strong>선형 모델</strong>: maxAllowUserCount = <strong>최대 처리량 × (1 - 부하율)</strong><br>
+        <strong>비선형 모델</strong>: maxAllowUserCount = <strong>최대 처리량 × e<sup>-부하율</sup></strong><br>
+                (부하율이 0.5 이상일 때 처리량 급격히 감소)
+        <p>
+            접속 허용 인원은 위 공식을 기반으로 동적으로 계산됩니다.<br>
+            연습용 계정으로 접속해 부하율 변화를 직접 경험해보세요!<br>
+            <strong>* 연습용 계정 ID: 1234 / PW: 1234</strong>
+        </p>
+        <p><strong>🚀 즐거운 연습 되세요! 🚀</strong></p>
+    </div>
+</div>
+
+<h1 style="margin-bottom: 20px;">N 만명 대기열 시스템</h1>
 
 <!-- 로그인 폼 -->
 <div class="login-container">
-    <h1>수강 신청 로그인</h1>
-    <form action="/api/v1/auth/login" method="POST">
+    <h1>대기열 로그인</h1>
+    <form id="login-form" action="/api/v1/auth/login" method="POST">
         <label for="username">아이디:</label>
         <input type="text" id="username" name="username" placeholder="아이디를 입력하세요" required>
         <label for="password">비밀번호:</label>
         <input type="password" id="password" name="password" placeholder="비밀번호를 입력하세요" required>
         <button type="submit">로그인</button>
     </form>
-    <div id="simulate-mass-login-container">
-        <label>
-            <input type="checkbox" id="simulate-mass-login" name="simulateMassLogin">
-            동시 실행 (현재 유저 + 1000 더미 유저)
-        </label>
-    </div>
 </div>
+
+<!-- 테스트 버튼 & 카운트다운 UI -->
+<div class="test-container">
+    <button id="test-button" style="background-color: #cc0000">부하 테스트 시작</button>
+    <button id="reset-button">테스트 새로 하기</button>
+</div>
+<div id="countdown-display"></div>
 
 <!-- 개발자 정보 -->
 <div class="developer-credit">Developed by Jae Weon Lee</div>
-</body>
-</html>
 <script>
-    // DOM 요소 가져오기
-    const form = document.querySelector('form');
-    const simulateMassLoginCheckbox = document.getElementById('simulate-mass-login');
-    const submitButton = form.querySelector('button[type="submit"]');
+    let isTestRunning = false;
+    const QUEUE_SERVER_URL = "http://waitingroom.reservate.click";
 
-    // 로그인 버튼 클릭 이벤트
-    submitButton.addEventListener('click', (e) => {
-        if (simulateMassLoginCheckbox.checked) {
-            // 체크박스가 선택된 경우
-            e.preventDefault(); // 기본 폼 제출 방지
+    document.addEventListener("DOMContentLoaded", () => {
+        const modal = document.getElementById("intro-modal");
+        const closeModal = document.querySelector(".close-modal");
 
-            const dummyUserData = {
-                username: 'dummy_user_1',
-                password: 'defaultPassword123',
-            };
+        closeModal.addEventListener("click", () => {
+            modal.style.display = "none";
+        });
+    });
 
-            // URL 인코딩 방식으로 데이터 변환
-            const urlEncodedData = new URLSearchParams(dummyUserData).toString();
+    document.getElementById("test-button").addEventListener("click", () => {
+        startCountdown(10);
+    });
 
-            // fetch API로 URL 인코딩 데이터를 전송
-            fetch(form.action, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: urlEncodedData,
+    document.getElementById("reset-button").addEventListener("click", () => {
+        fetch(`${QUEUE_SERVER_URL}/api/v1/queue/flushAll`, { method: 'POST' })
+            .then(response => response.text())
+            .then(data => {
+                alert("테스트가 초기화되었습니다.");
             })
-                .then((response) => {
-                    if (response.redirected) {
-                        // 리다이렉션 발생 시 해당 URL로 이동
-                        window.location.href = response.url;
-                    } else if (response.ok) {
-                        console.log('Dummy user login success!');
-                    } else {
-                        throw new Error('로그인 실패');
-                    }
-                })
-                .catch((error) => {
-                    console.error('Error during dummy login:', error);
-                    // alert('Dummy user 로그인 실패!');
-                });
-        } else {
-            // 체크박스가 선택되지 않은 경우 기본 폼 제출
-            // 폼 동작을 그대로 유지
+            .catch(error => {
+                console.error("Redis 초기화 오류:", error);
+                alert("초기화 중 오류가 발생했습니다.");
+            });
+    });
+
+    function startCountdown(seconds) {
+        const countdownDisplay = document.getElementById("countdown-display");
+        countdownDisplay.style.display = "block";
+        let counter = seconds;
+        isTestRunning = true;
+
+        const interval = setInterval(() => {
+            countdownDisplay.innerText = counter > 0 ? `테스트 시작까지 ${counter}초` : "테스트 시작!";
+            counter--;
+
+            if (counter === 5) {
+                fetch('/api/v1/loadtest/start', { method: 'POST' })
+                    .then(response => response.text())
+                    .then(data => {
+                        console.log("k6 실행 결과:", data);
+                    })
+                    .catch(error => {
+                        console.error("k6 실행 오류:", error);
+                    });
+            }
+
+            if (counter < 0) {
+                isTestRunning = false;
+                clearInterval(interval);
+                countdownDisplay.style.display = "none";
+            }
+        }, 1000);
+    }
+
+    document.getElementById("login-form").addEventListener("submit", function (event) {
+        if (isTestRunning) {
+            event.preventDefault();
+            alert("아직 수강 신청 기간이 아닙니다. 카운트다운이 끝난 후 로그인하세요.");
         }
     });
 </script>
+</body>
+</html>

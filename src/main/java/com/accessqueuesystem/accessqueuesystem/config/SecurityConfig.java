@@ -22,7 +22,7 @@ import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
-@EnableMethodSecurity // 메소드 수준의 보안을 활성화 (예: @PreAuthorize)
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final UserDetailsServiceImpl userDetailsService;
@@ -41,12 +41,15 @@ public class SecurityConfig {
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/course",
                                 "/",
+                                "/**",
                                 "/css/**",
                                 "/js/**",
                                 "/images/**",
                                 "/webjars/**",
                                 "/waiting-room",
-                                "/api/v1/queue/**"
+                                "/api/v1/loadtest/start",
+                                "/api/v1/queue/**",
+                                "/auth/health"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
@@ -67,7 +70,15 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://127.0.0.1:9000")); // 허용할 Origin
+
+        // 환경 변수로 CORS 설정 관리
+        String allowedOrigins = System.getenv("CORS_ALLOWED_ORIGINS");
+        if (allowedOrigins != null && !allowedOrigins.isBlank()) {
+            configuration.setAllowedOrigins(List.of(allowedOrigins.split(","))); // 환경 변수에서 가져온 Origin 설정
+        } else {
+            configuration.setAllowedOrigins(List.of("*")); // 기본 설정: 모든 Origin 허용 (배포 환경에서는 비추천)
+        }
+
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true); // 자격 증명 허용 (예: 쿠키 포함)
