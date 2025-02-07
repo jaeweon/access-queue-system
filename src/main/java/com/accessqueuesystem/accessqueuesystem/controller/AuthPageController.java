@@ -27,8 +27,8 @@ public class AuthPageController {
 
     @GetMapping("/course")
     public String coursePage(Model model) {
-        List<CourseEntity> courses = courseService.findAll();
-        model.addAttribute("courses", courses);
+//        List<CourseEntity> courses = courseService.findAll();
+//        model.addAttribute("courses", courses);
         return "course";
     }
 }
