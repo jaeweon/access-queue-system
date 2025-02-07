@@ -140,6 +140,9 @@
             font-size: 14px;
             color: rgba(255, 255, 255, 0.8);
         }
+        #loginBtn{
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -158,7 +161,7 @@
             1. 로그인 버튼을 눌러 일반 로그인을 진행하세요.<br>
             2. "부하 테스트 시작" 버튼을 눌러 카운트다운과 동시에<br>
             N만 명의 동시 접속 테스트를 실행할 수 있습니다.<br>
-            3. 카운트다운이 종료되면 로그인이 허용됩니다.<br>
+            3. 카운트다운이 종료되면 로그인 버튼이 활성화됩니다.<br>
             4. <strong>테스트 종료 후, 반드시 "테스트 새로 하기" 버튼을 눌러</strong> 시스템을 초기화하세요.<br>
         </p>
         <p>
@@ -200,7 +203,7 @@
         <input type="text" id="username" name="username" placeholder="아이디를 입력하세요" required>
         <label for="password">비밀번호:</label>
         <input type="password" id="password" name="password" placeholder="비밀번호를 입력하세요" required>
-        <button type="submit">로그인</button>
+        <button id="loginBtn" type="submit">로그인</button>
     </form>
 </div>
 
@@ -227,7 +230,7 @@
     });
 
     document.getElementById("test-button").addEventListener("click", () => {
-        startCountdown(10);
+        startCountdown(15);
     });
 
     document.getElementById("reset-button").addEventListener("click", () => {
@@ -252,7 +255,7 @@
             countdownDisplay.innerText = counter > 0 ? `테스트 시작까지 ${counter}초` : "테스트 시작!";
             counter--;
 
-            if (counter === 5) {
+            if (counter === 14) {
                 fetch('/api/v1/loadtest/start', { method: 'POST' })
                     .then(response => response.text())
                     .then(data => {
@@ -267,8 +270,9 @@
                 isTestRunning = false;
                 clearInterval(interval);
                 countdownDisplay.style.display = "none";
+                document.getElementById("loginBtn").style.display = "block";
             }
-        }, 1000);
+        }, 1500);
     }
 
     document.getElementById("login-form").addEventListener("submit", function (event) {
